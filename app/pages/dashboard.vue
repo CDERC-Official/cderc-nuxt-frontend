@@ -1,0 +1,104 @@
+<template>
+  <section class="page-shell space-y-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-medium uppercase tracking-wide text-primary-700">Uebersicht</p>
+        <h1 class="mt-1 text-3xl font-semibold text-gray-950">Dashboard</h1>
+      </div>
+      <UButton to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-3">
+      <UCard v-for="metric in metrics" :key="metric.label">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-sm text-gray-500">{{ metric.label }}</p>
+            <p class="mt-2 text-3xl font-semibold text-gray-950">{{ metric.value }}</p>
+          </div>
+          <UIcon :name="metric.icon" class="size-6 text-primary-600" />
+        </div>
+      </UCard>
+    </div>
+
+    <section class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-base font-semibold text-gray-950">Aktuelle Kinder</h2>
+            <UButton to="/children" icon="i-lucide-arrow-right" size="sm" variant="ghost" color="neutral" />
+          </div>
+        </template>
+
+        <div v-if="pending" class="space-y-3">
+          <USkeleton v-for="item in 4" :key="item" class="h-11 w-full" />
+        </div>
+        <UTable v-else :data="childrenPreview" :columns="columns" />
+      </UCard>
+
+      <UCard>
+        <template #header>
+          <h2 class="text-base font-semibold text-gray-950">Backend</h2>
+        </template>
+        <div class="space-y-4">
+          <div>
+            <p class="text-sm text-gray-500">API Basis</p>
+            <p class="mt-1 break-all text-sm font-medium text-gray-900">{{ apiBase }}</p>
+          </div>
+          <UButton to="/api-explorer" icon="i-lucide-braces" variant="soft" block>API testen</UButton>
+        </div>
+      </UCard>
+    </section>
+  </section>
+</template>
+
+<script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
+import type { ChildResponse, Organization, User } from '~/types/api'
+
+definePageMeta({ middleware: 'auth' })
+
+const config = useRuntimeConfig()
+const apiBase = config.public.apiBase
+const api = useApi()
+const pending = ref(true)
+const children = ref<ChildResponse[]>([])
+const organizations = ref<Organization[]>([])
+const users = ref<User[]>([])
+
+const columns: TableColumn<ChildResponse>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'gender', header: 'Geschlecht' },
+  { accessorKey: 'healthStatus', header: 'Gesundheit' },
+  { accessorKey: 'schoolStatus', header: 'Schule' },
+]
+
+const childrenPreview = computed(() => children.value.slice(0, 5))
+
+const metrics = computed(() => [
+  { label: 'Kinder', value: children.value.length, icon: 'i-lucide-heart-handshake' },
+  { label: 'Organisationen', value: organizations.value.length, icon: 'i-lucide-building-2' },
+  { label: 'Nutzer', value: users.value.length, icon: 'i-lucide-users' },
+])
+
+onMounted(async () => {
+  try {
+    const [childrenResult, organizationsResult, usersResult] = await Promise.allSettled([
+      api<ChildResponse[]>('children'),
+      api<Organization[]>('super-admin/organizations'),
+      api<User[]>('users'),
+    ])
+
+    if (childrenResult.status === 'fulfilled') {
+      children.value = childrenResult.value
+    }
+    if (organizationsResult.status === 'fulfilled') {
+      organizations.value = organizationsResult.value
+    }
+    if (usersResult.status === 'fulfilled') {
+      users.value = usersResult.value
+    }
+  } finally {
+    pending.value = false
+  }
+})
+</script>
