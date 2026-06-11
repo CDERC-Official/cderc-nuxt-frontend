@@ -1,12 +1,10 @@
 <template>
   <section class="page-shell space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-medium uppercase tracking-wide text-primary-700">Nutzer</p>
-        <h1 class="mt-1 text-3xl font-semibold text-gray-950">Nutzer verwalten</h1>
-      </div>
-      <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadUsers">Aktualisieren</UButton>
-    </div>
+    <PageHeader eyebrow="Nutzer" title="Nutzer verwalten">
+      <template #actions>
+        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadUsers">Aktualisieren</UButton>
+      </template>
+    </PageHeader>
 
     <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <UCard>
@@ -42,57 +40,39 @@
             </select>
           </UFormField>
 
-          <UAlert
-            v-if="message"
-            :color="messageType"
-            variant="soft"
-            :icon="messageType === 'success' ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'"
-            :description="message"
-          />
+          <FeedbackAlert :message="message" :type="messageType" />
 
-          <UButton type="submit" icon="i-lucide-user-plus" :loading="saving" :disabled="!canSave">
-            Anlegen
-          </UButton>
+          <FormActions submit-label="Anlegen" submit-icon="i-lucide-user-plus" :loading="saving" :disabled="!canSave" />
         </form>
       </UCard>
 
-      <UCard>
-        <template #header>
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 class="text-base font-semibold text-gray-950">Liste</h2>
-            <UInput v-model="query" icon="i-lucide-search" placeholder="Suchen" class="w-full sm:w-64" />
-          </div>
-        </template>
-
-        <div v-if="pending" class="space-y-3">
-          <USkeleton v-for="item in 6" :key="item" class="h-12 w-full" />
-        </div>
-        <div v-else-if="filteredUsers.length === 0" class="py-10 text-center text-sm text-gray-500">
-          Keine Nutzer gefunden.
-        </div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full min-w-[760px] border-collapse text-left text-sm">
-            <thead>
-              <tr class="border-b border-gray-200 text-gray-500">
-                <th class="py-3 pr-4 font-medium">Name</th>
-                <th class="py-3 pr-4 font-medium">E-Mail</th>
-                <th class="py-3 pr-4 font-medium">Rolle</th>
-                <th class="py-3 pr-0 font-medium">Organisation</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="user in filteredUsers" :key="user.id" class="border-b border-gray-100">
-                <td class="py-3 pr-4 font-medium text-gray-950">{{ user.name || '-' }}</td>
-                <td class="py-3 pr-4 text-gray-600">{{ user.email || '-' }}</td>
-                <td class="py-3 pr-4">
-                  <UBadge color="neutral" variant="soft">{{ user.role || '-' }}</UBadge>
-                </td>
-                <td class="py-3 pr-0 text-gray-600">{{ user.organization?.name || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </UCard>
+      <EntityListCard
+        v-model="query"
+        :loading="pending"
+        :empty="filteredUsers.length === 0"
+        empty-text="Keine Nutzer gefunden."
+      >
+        <table class="w-full min-w-[760px] border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-gray-500">
+              <th class="py-3 pr-4 font-medium">Name</th>
+              <th class="py-3 pr-4 font-medium">E-Mail</th>
+              <th class="py-3 pr-4 font-medium">Rolle</th>
+              <th class="py-3 pr-0 font-medium">Organisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in filteredUsers" :key="user.id" class="border-b border-gray-100">
+              <td class="py-3 pr-4 font-medium text-gray-950">{{ user.name || '-' }}</td>
+              <td class="py-3 pr-4 text-gray-600">{{ user.email || '-' }}</td>
+              <td class="py-3 pr-4">
+                <UBadge color="neutral" variant="soft">{{ user.role || '-' }}</UBadge>
+              </td>
+              <td class="py-3 pr-0 text-gray-600">{{ user.organization?.name || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </EntityListCard>
     </div>
   </section>
 </template>

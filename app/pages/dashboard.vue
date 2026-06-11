@@ -1,12 +1,10 @@
 <template>
   <section class="page-shell space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-medium uppercase tracking-wide text-primary-700">Uebersicht</p>
-        <h1 class="mt-1 text-3xl font-semibold text-gray-950">Dashboard</h1>
-      </div>
-      <UButton to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
-    </div>
+    <PageHeader eyebrow="Uebersicht" title="Dashboard">
+      <template #actions>
+        <UButton to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
+      </template>
+    </PageHeader>
 
     <div class="grid gap-4 md:grid-cols-3">
       <UCard v-for="metric in metrics" :key="metric.label">
@@ -29,9 +27,7 @@
           </div>
         </template>
 
-        <div v-if="pending" class="space-y-3">
-          <USkeleton v-for="item in 4" :key="item" class="h-11 w-full" />
-        </div>
+        <LoadingRows v-if="pending" :count="4" row-class="h-11 w-full" />
         <UTable v-else :data="childrenPreview" :columns="columns" />
       </UCard>
 

@@ -1,12 +1,10 @@
 <template>
   <section class="page-shell space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-medium uppercase tracking-wide text-primary-700">Organisationen</p>
-        <h1 class="mt-1 text-3xl font-semibold text-gray-950">Organisationen verwalten</h1>
-      </div>
-      <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadOrganizations">Aktualisieren</UButton>
-    </div>
+    <PageHeader eyebrow="Organisationen" title="Organisationen verwalten">
+      <template #actions>
+        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadOrganizations">Aktualisieren</UButton>
+      </template>
+    </PageHeader>
 
     <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <UCard>
@@ -36,68 +34,44 @@
             </div>
           </UFormField>
 
-          <UAlert
-            v-if="message"
-            :color="messageType"
-            variant="soft"
-            :icon="messageType === 'success' ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'"
-            :description="message"
-          />
+          <FeedbackAlert :message="message" :type="messageType" />
 
-          <div class="flex flex-wrap gap-2">
-            <UButton type="submit" icon="i-lucide-save" :loading="saving" :disabled="!form.name">Speichern</UButton>
-            <UButton v-if="editingId" type="button" icon="i-lucide-x" variant="ghost" color="neutral" @click="resetForm">
-              Abbrechen
-            </UButton>
-          </div>
+          <FormActions :loading="saving" :disabled="!form.name" :show-cancel="Boolean(editingId)" @cancel="resetForm" />
         </form>
       </UCard>
 
-      <UCard>
-        <template #header>
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 class="text-base font-semibold text-gray-950">Liste</h2>
-            <UInput v-model="query" icon="i-lucide-search" placeholder="Suchen" class="w-full sm:w-64" />
-          </div>
-        </template>
-
-        <div v-if="pending" class="space-y-3">
-          <USkeleton v-for="item in 6" :key="item" class="h-12 w-full" />
-        </div>
-        <div v-else-if="filteredOrganizations.length === 0" class="py-10 text-center text-sm text-gray-500">
-          Keine Organisationen gefunden.
-        </div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full min-w-[720px] border-collapse text-left text-sm">
-            <thead>
-              <tr class="border-b border-gray-200 text-gray-500">
-                <th class="py-3 pr-4 font-medium">Name</th>
-                <th class="py-3 pr-4 font-medium">E-Mail</th>
-                <th class="py-3 pr-4 font-medium">Farbe</th>
-                <th class="py-3 pr-0 text-right font-medium">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="organization in filteredOrganizations" :key="organization.id" class="border-b border-gray-100">
-                <td class="py-3 pr-4 font-medium text-gray-950">{{ organization.name || '-' }}</td>
-                <td class="py-3 pr-4 text-gray-600">{{ organization.email || '-' }}</td>
-                <td class="py-3 pr-4">
-                  <span class="inline-flex items-center gap-2 text-gray-600">
-                    <span class="size-4 rounded border border-gray-200" :style="{ backgroundColor: organization.themeColor || '#e5e7eb' }" />
-                    {{ organization.themeColor || '-' }}
-                  </span>
-                </td>
-                <td class="py-3 pr-0">
-                  <div class="flex justify-end gap-1">
-                    <UButton icon="i-lucide-pencil" size="sm" variant="ghost" color="neutral" aria-label="Bearbeiten" @click="editOrganization(organization)" />
-                    <UButton icon="i-lucide-trash-2" size="sm" variant="ghost" color="error" aria-label="Loeschen" @click="deleteOrganization(organization)" />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </UCard>
+      <EntityListCard
+        v-model="query"
+        :loading="pending"
+        :empty="filteredOrganizations.length === 0"
+        empty-text="Keine Organisationen gefunden."
+      >
+        <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-gray-500">
+              <th class="py-3 pr-4 font-medium">Name</th>
+              <th class="py-3 pr-4 font-medium">E-Mail</th>
+              <th class="py-3 pr-4 font-medium">Farbe</th>
+              <th class="py-3 pr-0 text-right font-medium">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="organization in filteredOrganizations" :key="organization.id" class="border-b border-gray-100">
+              <td class="py-3 pr-4 font-medium text-gray-950">{{ organization.name || '-' }}</td>
+              <td class="py-3 pr-4 text-gray-600">{{ organization.email || '-' }}</td>
+              <td class="py-3 pr-4">
+                <span class="inline-flex items-center gap-2 text-gray-600">
+                  <span class="size-4 rounded border border-gray-200" :style="{ backgroundColor: organization.themeColor || '#e5e7eb' }" />
+                  {{ organization.themeColor || '-' }}
+                </span>
+              </td>
+              <td class="py-3 pr-0">
+                <RowActions @edit="editOrganization(organization)" @delete="deleteOrganization(organization)" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </EntityListCard>
     </div>
   </section>
 </template>
