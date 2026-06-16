@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@nuxt/ui": "latest",
-    "nuxt": "latest",
+    "nuxt": "^4.0.0",
     "vue": "latest",
     "vue-router": "latest"
   },
