@@ -1,15 +1,15 @@
-<template>
+﻿<template>
   <UCard>
     <template #header>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-base font-semibold text-gray-950">{{ title }}</h2>
-        <UInput v-model="query" icon="i-lucide-search" placeholder="Suchen" class="w-full sm:w-64" />
+        <h2 class="text-base font-semibold text-gray-950">{{ title || t('common.list') }}</h2>
+        <UInput v-model="query" icon="i-lucide-search" :placeholder="t('common.search')" class="w-full sm:w-64" />
       </div>
     </template>
 
     <LoadingRows v-if="loading" :count="loadingRows" />
     <div v-else-if="empty" class="py-10 text-center text-sm text-gray-500">
-      {{ emptyText }}
+      {{ emptyText || t('common.noEntries') }}
     </div>
     <div v-else class="overflow-x-auto">
       <slot />
@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 const query = defineModel<string>({ required: true })
+const { t } = useI18n()
 
 withDefaults(
   defineProps<{
@@ -29,10 +30,10 @@ withDefaults(
     loadingRows?: number
   }>(),
   {
-    title: 'Liste',
+    title: '',
     loading: false,
     empty: false,
-    emptyText: 'Keine Eintraege gefunden.',
+    emptyText: '',
     loadingRows: 6,
   },
 )

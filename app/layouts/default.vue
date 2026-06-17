@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-screen">
     <header class="border-b border-gray-200 bg-white">
       <div class="page-shell flex h-16 items-center justify-between gap-4">
@@ -20,13 +20,24 @@
           </UButton>
         </nav>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
+          <UButton
+            v-for="option in localeOptions"
+            :key="option.code"
+            size="sm"
+            color="neutral"
+            :variant="locale === option.code ? 'soft' : 'ghost'"
+            :aria-label="t('nav.language')"
+            @click="setLocale(option.code)"
+          >
+            {{ option.label }}
+          </UButton>
           <UButton
             v-if="auth.isLoggedIn.value"
             icon="i-lucide-log-out"
             color="neutral"
             variant="ghost"
-            aria-label="Abmelden"
+            :aria-label="t('nav.logout')"
             @click="logout"
           />
         </div>
@@ -42,13 +53,19 @@
 <script setup lang="ts">
 const route = useRoute()
 const auth = useAuth()
+const { t, locale, setLocale } = useI18n()
 
-const navItems = [
-  { label: 'Dashboard', to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
-  { label: 'Kinder', to: '/children', icon: 'i-lucide-heart-handshake' },
-  { label: 'Organisationen', to: '/organizations', icon: 'i-lucide-building-2' },
-  { label: 'Nutzer', to: '/users', icon: 'i-lucide-users' },
-  { label: 'API Explorer', to: '/api-explorer', icon: 'i-lucide-braces' },
+const navItems = computed(() => [
+  { label: t('nav.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
+  { label: t('nav.children'), to: '/children', icon: 'i-lucide-heart-handshake' },
+  { label: t('nav.organizations'), to: '/organizations', icon: 'i-lucide-building-2' },
+  { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
+  { label: t('nav.apiExplorer'), to: '/api-explorer', icon: 'i-lucide-braces' },
+])
+
+const localeOptions = [
+  { code: 'de' as const, label: 'DE' },
+  { code: 'en' as const, label: 'EN' },
 ]
 
 onMounted(() => auth.loadToken())
@@ -58,3 +75,4 @@ const logout = async () => {
   await navigateTo('/login')
 }
 </script>
+

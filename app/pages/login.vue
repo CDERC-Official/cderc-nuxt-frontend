@@ -1,32 +1,32 @@
-<template>
+﻿<template>
   <section class="page-shell grid min-h-[calc(100vh-128px)] items-center">
     <div class="mx-auto w-full max-w-md">
       <div class="mb-8">
         <p class="text-sm font-medium uppercase tracking-wide text-primary-700">CDERC</p>
-        <h1 class="mt-2 text-3xl font-semibold text-gray-950">Anmelden</h1>
-        <p class="mt-2 text-sm text-gray-600">Zugang zur Verwaltungsoberflaeche.</p>
+        <h1 class="mt-2 text-3xl font-semibold text-gray-950">{{ t('login.title') }}</h1>
+        <p class="mt-2 text-sm text-gray-600">{{ t('login.subtitle') }}</p>
       </div>
 
       <UCard>
         <form class="space-y-5" @submit.prevent="submit">
-          <UFormField label="E-Mail" name="email" required>
+          <UFormField :label="t('common.email')" name="email" required>
             <UInput
               v-model="form.email"
               icon="i-lucide-mail"
               type="email"
               autocomplete="email"
-              placeholder="name@organisation.at"
+              :placeholder="t('login.emailPlaceholder')"
               class="w-full"
             />
           </UFormField>
 
-          <UFormField label="Passwort" name="password" required>
+          <UFormField :label="t('common.password')" name="password" required>
             <UInput
               v-model="form.password"
               icon="i-lucide-lock-keyhole"
               type="password"
               autocomplete="current-password"
-              placeholder="Passwort"
+              :placeholder="t('login.passwordPlaceholder')"
               class="w-full"
             />
           </UFormField>
@@ -46,7 +46,7 @@
             :loading="pending"
             :disabled="!form.email || !form.password"
           >
-            Einloggen
+            {{ t('login.submit') }}
           </UButton>
         </form>
       </UCard>
@@ -58,6 +58,7 @@
 definePageMeta({ middleware: 'auth' })
 
 const auth = useAuth()
+const { t } = useI18n()
 const pending = ref(false)
 const error = ref('')
 const form = reactive({
@@ -73,7 +74,7 @@ const submit = async () => {
     await auth.login(form)
     await navigateTo('/dashboard')
   } catch {
-    error.value = 'Login fehlgeschlagen. Bitte E-Mail und Passwort pruefen.'
+    error.value = t('login.failed')
   } finally {
     pending.value = false
   }

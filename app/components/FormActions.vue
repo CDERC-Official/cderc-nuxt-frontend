@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <div class="flex flex-wrap gap-2">
     <UButton type="submit" :icon="submitIcon" :loading="loading" :disabled="disabled">
-      {{ submitLabel }}
+      {{ submitLabel || t('common.save') }}
     </UButton>
     <UButton v-if="showCancel" type="button" icon="i-lucide-x" variant="ghost" color="neutral" @click="$emit('cancel')">
-      Abbrechen
+      {{ t('common.cancel') }}
     </UButton>
   </div>
 </template>
@@ -13,6 +13,8 @@
 defineEmits<{
   cancel: []
 }>()
+
+const { t } = useI18n()
 
 withDefaults(
   defineProps<{
@@ -23,7 +25,7 @@ withDefaults(
     showCancel?: boolean
   }>(),
   {
-    submitLabel: 'Speichern',
+    submitLabel: '',
     submitIcon: 'i-lucide-save',
     loading: false,
     disabled: false,

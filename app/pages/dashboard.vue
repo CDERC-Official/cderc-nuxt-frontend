@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-6">
-    <PageHeader eyebrow="Uebersicht" title="Dashboard">
+    <PageHeader :eyebrow="t('dashboard.eyebrow')" :title="t('dashboard.title')">
       <template #actions>
-        <UButton to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
+        <UButton to="/children" icon="i-lucide-plus">{{ t('dashboard.addChild') }}</UButton>
       </template>
     </PageHeader>
 
@@ -22,7 +22,7 @@
       <UCard>
         <template #header>
           <div class="flex items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-gray-950">Aktuelle Kinder</h2>
+            <h2 class="text-base font-semibold text-gray-950">{{ t('dashboard.recentChildren') }}</h2>
             <UButton to="/children" icon="i-lucide-arrow-right" size="sm" variant="ghost" color="neutral" />
           </div>
         </template>
@@ -33,14 +33,14 @@
 
       <UCard>
         <template #header>
-          <h2 class="text-base font-semibold text-gray-950">Backend</h2>
+          <h2 class="text-base font-semibold text-gray-950">{{ t('dashboard.backend') }}</h2>
         </template>
         <div class="space-y-4">
           <div>
-            <p class="text-sm text-gray-500">API Basis</p>
+            <p class="text-sm text-gray-500">{{ t('common.apiBase') }}</p>
             <p class="mt-1 break-all text-sm font-medium text-gray-900">{{ apiBase }}</p>
           </div>
-          <UButton to="/api-explorer" icon="i-lucide-braces" variant="soft" block>API testen</UButton>
+          <UButton to="/api-explorer" icon="i-lucide-braces" variant="soft" block>{{ t('dashboard.testApi') }}</UButton>
         </div>
       </UCard>
     </section>
@@ -56,24 +56,25 @@ definePageMeta({ middleware: 'auth' })
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 const api = useApi()
+const { t } = useI18n()
 const pending = ref(true)
 const children = ref<ChildResponse[]>([])
 const organizations = ref<Organization[]>([])
 const users = ref<User[]>([])
 
-const columns: TableColumn<ChildResponse>[] = [
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'gender', header: 'Geschlecht' },
-  { accessorKey: 'healthStatus', header: 'Gesundheit' },
-  { accessorKey: 'schoolStatus', header: 'Schule' },
-]
+const columns = computed<TableColumn<ChildResponse>[]>(() => [
+  { accessorKey: 'name', header: t('common.name') },
+  { accessorKey: 'gender', header: t('children.gender') },
+  { accessorKey: 'healthStatus', header: t('children.health') },
+  { accessorKey: 'schoolStatus', header: t('children.school') },
+])
 
 const childrenPreview = computed(() => children.value.slice(0, 5))
 
 const metrics = computed(() => [
-  { label: 'Kinder', value: children.value.length, icon: 'i-lucide-heart-handshake' },
-  { label: 'Organisationen', value: organizations.value.length, icon: 'i-lucide-building-2' },
-  { label: 'Nutzer', value: users.value.length, icon: 'i-lucide-users' },
+  { label: t('dashboard.metrics.children'), value: children.value.length, icon: 'i-lucide-heart-handshake' },
+  { label: t('dashboard.metrics.organizations'), value: organizations.value.length, icon: 'i-lucide-building-2' },
+  { label: t('dashboard.metrics.users'), value: users.value.length, icon: 'i-lucide-users' },
 ])
 
 onMounted(async () => {

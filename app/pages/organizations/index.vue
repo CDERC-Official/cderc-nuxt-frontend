@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-6">
-    <PageHeader eyebrow="Organisationen" title="Organisationen verwalten">
+    <PageHeader :eyebrow="t('organizations.eyebrow')" :title="t('organizations.title')">
       <template #actions>
-        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadOrganizations">Aktualisieren</UButton>
+        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadOrganizations">{{ t('common.refresh') }}</UButton>
       </template>
     </PageHeader>
 
@@ -10,26 +10,26 @@
       <UCard>
         <template #header>
           <h2 class="text-base font-semibold text-gray-950">
-            {{ editingId ? 'Organisation bearbeiten' : 'Organisation erfassen' }}
+            {{ editingId ? t('organizations.editTitle') : t('organizations.createTitle') }}
           </h2>
         </template>
 
         <form class="space-y-4" @submit.prevent="saveOrganization">
-          <UFormField label="Name" required>
-            <UInput v-model="form.name" icon="i-lucide-building-2" placeholder="Name" class="w-full" />
+          <UFormField :label="t('common.name')" required>
+            <UInput v-model="form.name" icon="i-lucide-building-2" :placeholder="t('common.name')" class="w-full" />
           </UFormField>
 
-          <UFormField label="E-Mail">
+          <UFormField :label="t('common.email')">
             <UInput v-model="form.email" icon="i-lucide-mail" type="email" placeholder="kontakt@example.org" class="w-full" />
           </UFormField>
 
-          <UFormField label="Logo URL">
+          <UFormField :label="t('organizations.logoUrl')">
             <UInput v-model="form.logo" icon="i-lucide-image" placeholder="https://..." class="w-full" />
           </UFormField>
 
-          <UFormField label="Theme-Farbe">
+          <UFormField :label="t('organizations.themeColor')">
             <div class="flex gap-2">
-              <input v-model="form.themeColor" type="color" class="h-9 w-12 rounded border border-gray-300 bg-white p-1" aria-label="Theme-Farbe" />
+              <input v-model="form.themeColor" type="color" class="h-9 w-12 rounded border border-gray-300 bg-white p-1" :aria-label="t('organizations.themeColor')" />
               <UInput v-model="form.themeColor" placeholder="#16a34a" class="w-full" />
             </div>
           </UFormField>
@@ -44,15 +44,15 @@
         v-model="query"
         :loading="pending"
         :empty="filteredOrganizations.length === 0"
-        empty-text="Keine Organisationen gefunden."
+        :empty-text="t('organizations.noOrganizations')"
       >
         <table class="w-full min-w-[720px] border-collapse text-left text-sm">
           <thead>
             <tr class="border-b border-gray-200 text-gray-500">
-              <th class="py-3 pr-4 font-medium">Name</th>
-              <th class="py-3 pr-4 font-medium">E-Mail</th>
-              <th class="py-3 pr-4 font-medium">Farbe</th>
-              <th class="py-3 pr-0 text-right font-medium">Aktionen</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.name') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.email') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.color') }}</th>
+              <th class="py-3 pr-0 text-right font-medium">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -82,6 +82,7 @@ import type { Organization } from '~/types/api'
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const { t } = useI18n()
 const pending = ref(false)
 const saving = ref(false)
 const organizations = ref<Organization[]>([])
@@ -117,7 +118,7 @@ const loadOrganizations = async () => {
   try {
     organizations.value = await api<Organization[]>('super-admin/organizations')
   } catch {
-    showMessage('Organisationen konnten nicht geladen werden.', 'error')
+    showMessage(t('organizations.loadError'), 'error')
   } finally {
     pending.value = false
   }
@@ -147,35 +148,35 @@ const saveOrganization = async () => {
         method: 'PUT',
         body: { ...form },
       })
-      showMessage('Organisation wurde aktualisiert.', 'success')
+      showMessage(t('organizations.updated'), 'success')
     } else {
       await api<Organization>('super-admin/organizations', {
         method: 'POST',
         body: { ...form },
       })
-      showMessage('Organisation wurde erfasst.', 'success')
+      showMessage(t('organizations.created'), 'success')
     }
 
     resetForm()
     await loadOrganizations()
   } catch {
-    showMessage('Speichern fehlgeschlagen.', 'error')
+    showMessage(t('organizations.saveError'), 'error')
   } finally {
     saving.value = false
   }
 }
 
 const deleteOrganization = async (organization: Organization) => {
-  if (!organization.id || !confirm(`Organisation "${organization.name || organization.id}" loeschen?`)) {
+  if (!organization.id || !confirm(t('organizations.confirmDelete', { name: organization.name || organization.id }))) {
     return
   }
 
   try {
     await api<void>(`super-admin/organizations/${organization.id}`, { method: 'DELETE' })
-    showMessage('Organisation wurde geloescht.', 'success')
+    showMessage(t('organizations.deleted'), 'success')
     await loadOrganizations()
   } catch {
-    showMessage('Loeschen fehlgeschlagen.', 'error')
+    showMessage(t('organizations.deleteError'), 'error')
   }
 }
 

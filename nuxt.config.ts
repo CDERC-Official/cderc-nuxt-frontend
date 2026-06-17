@@ -1,12 +1,22 @@
-export default defineNuxtConfig({
+﻿export default defineNuxtConfig({
   ssr: false,
-  modules: ['@nuxt/ui'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n'],
   css: ['~/assets/css/main.css'],
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:30007/api',
     },
+  },
+  i18n: {
+    defaultLocale: 'de',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: false,
+    locales: [
+      { code: 'de', name: 'Deutsch', language: 'de-AT' },
+      { code: 'en', name: 'English', language: 'en-US' },
+    ],
+    vueI18n: './i18n.config.ts',
   },
   app: {
     head: {
@@ -22,3 +32,4 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2026-06-09',
 })
+

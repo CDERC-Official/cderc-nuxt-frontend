@@ -1,39 +1,39 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-6">
-    <PageHeader eyebrow="Nutzer" title="Nutzer verwalten">
+    <PageHeader :eyebrow="t('users.eyebrow')" :title="t('users.title')">
       <template #actions>
-        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadUsers">Aktualisieren</UButton>
+        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadUsers">{{ t('common.refresh') }}</UButton>
       </template>
     </PageHeader>
 
     <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <UCard>
         <template #header>
-          <h2 class="text-base font-semibold text-gray-950">Nutzer anlegen</h2>
+          <h2 class="text-base font-semibold text-gray-950">{{ t('users.createTitle') }}</h2>
         </template>
 
         <form class="space-y-4" @submit.prevent="saveUser">
-          <UFormField label="Name" required>
-            <UInput v-model="form.name" icon="i-lucide-user" placeholder="Name" class="w-full" />
+          <UFormField :label="t('common.name')" required>
+            <UInput v-model="form.name" icon="i-lucide-user" :placeholder="t('common.name')" class="w-full" />
           </UFormField>
 
-          <UFormField label="E-Mail" required>
+          <UFormField :label="t('common.email')" required>
             <UInput v-model="form.email" icon="i-lucide-mail" type="email" placeholder="name@example.org" class="w-full" />
           </UFormField>
 
-          <UFormField label="Passwort" required>
-            <UInput v-model="form.password" icon="i-lucide-lock-keyhole" type="password" placeholder="Passwort" class="w-full" />
+          <UFormField :label="t('common.password')" required>
+            <UInput v-model="form.password" icon="i-lucide-lock-keyhole" type="password" :placeholder="t('common.password')" class="w-full" />
           </UFormField>
 
-          <UFormField label="Rolle">
+          <UFormField :label="t('common.role')">
             <select v-model="form.role" class="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm">
               <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
             </select>
           </UFormField>
 
-          <UFormField v-if="form.role === 'ADMIN'" label="Organisation">
+          <UFormField v-if="form.role === 'ADMIN'" :label="t('common.organization')">
             <select v-model.number="organizationId" class="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm">
-              <option :value="undefined">Keine Organisation</option>
+              <option :value="undefined">{{ t('users.noOrganization') }}</option>
               <option v-for="organization in organizations" :key="organization.id" :value="organization.id">
                 {{ organization.name || organization.id }}
               </option>
@@ -42,7 +42,7 @@
 
           <FeedbackAlert :message="message" :type="messageType" />
 
-          <FormActions submit-label="Anlegen" submit-icon="i-lucide-user-plus" :loading="saving" :disabled="!canSave" />
+          <FormActions :submit-label="t('common.add')" submit-icon="i-lucide-user-plus" :loading="saving" :disabled="!canSave" />
         </form>
       </UCard>
 
@@ -50,15 +50,15 @@
         v-model="query"
         :loading="pending"
         :empty="filteredUsers.length === 0"
-        empty-text="Keine Nutzer gefunden."
+        :empty-text="t('users.noUsers')"
       >
         <table class="w-full min-w-[760px] border-collapse text-left text-sm">
           <thead>
             <tr class="border-b border-gray-200 text-gray-500">
-              <th class="py-3 pr-4 font-medium">Name</th>
-              <th class="py-3 pr-4 font-medium">E-Mail</th>
-              <th class="py-3 pr-4 font-medium">Rolle</th>
-              <th class="py-3 pr-0 font-medium">Organisation</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.name') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.email') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.role') }}</th>
+              <th class="py-3 pr-0 font-medium">{{ t('common.organization') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +83,7 @@ import type { CreateAdminRequest, CreateUserRequest, Organization, User, UserRol
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const { t } = useI18n()
 const roles: UserRole[] = ['ADMIN', 'SOCIAL_WORKER', 'VOLUNTEER', 'USER']
 const pending = ref(false)
 const saving = ref(false)
@@ -131,7 +132,7 @@ const loadUsers = async () => {
   try {
     users.value = await api<User[]>('users')
   } catch {
-    showMessage('Nutzer konnten nicht geladen werden.', 'error')
+    showMessage(t('users.loadError'), 'error')
   } finally {
     pending.value = false
   }
@@ -168,11 +169,11 @@ const saveUser = async () => {
       await api<User>('admin/users', { method: 'POST', body: { ...form } })
     }
 
-    showMessage('Nutzer wurde angelegt.', 'success')
+    showMessage(t('users.created'), 'success')
     resetForm()
     await loadUsers()
   } catch {
-    showMessage('Anlegen fehlgeschlagen.', 'error')
+    showMessage(t('users.createError'), 'error')
   } finally {
     saving.value = false
   }

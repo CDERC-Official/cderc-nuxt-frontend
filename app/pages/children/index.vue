@@ -1,32 +1,32 @@
-<template>
+﻿<template>
   <section class="page-shell space-y-6">
-    <PageHeader eyebrow="Kinder" title="Kinder verwalten">
+    <PageHeader :eyebrow="t('children.eyebrow')" :title="t('children.title')">
       <template #actions>
-        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadChildren">Aktualisieren</UButton>
+        <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadChildren">{{ t('common.refresh') }}</UButton>
       </template>
     </PageHeader>
 
     <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <UCard>
         <template #header>
-          <h2 class="text-base font-semibold text-gray-950">{{ editingId ? 'Kind bearbeiten' : 'Kind erfassen' }}</h2>
+          <h2 class="text-base font-semibold text-gray-950">{{ editingId ? t('children.editTitle') : t('children.createTitle') }}</h2>
         </template>
 
         <form class="space-y-4" @submit.prevent="saveChild">
-          <UFormField label="Name" required>
-            <UInput v-model="form.name" icon="i-lucide-user" placeholder="Name" class="w-full" />
+          <UFormField :label="t('common.name')" required>
+            <UInput v-model="form.name" icon="i-lucide-user" :placeholder="t('common.name')" class="w-full" />
           </UFormField>
 
-          <UFormField label="Geschlecht">
-            <UInput v-model="form.gender" icon="i-lucide-venus-and-mars" placeholder="z. B. weiblich" class="w-full" />
+          <UFormField :label="t('children.gender')">
+            <UInput v-model="form.gender" icon="i-lucide-venus-and-mars" :placeholder="t('children.genderPlaceholder')" class="w-full" />
           </UFormField>
 
-          <UFormField label="Gesundheitsstatus">
-            <UInput v-model="form.healthStatus" icon="i-lucide-heart-pulse" placeholder="Status" class="w-full" />
+          <UFormField :label="t('children.healthStatus')">
+            <UInput v-model="form.healthStatus" icon="i-lucide-heart-pulse" :placeholder="t('common.status')" class="w-full" />
           </UFormField>
 
-          <UFormField label="Schulstatus">
-            <UInput v-model="form.schoolStatus" icon="i-lucide-graduation-cap" placeholder="Status" class="w-full" />
+          <UFormField :label="t('children.schoolStatus')">
+            <UInput v-model="form.schoolStatus" icon="i-lucide-graduation-cap" :placeholder="t('common.status')" class="w-full" />
           </UFormField>
 
           <FeedbackAlert :message="message" :type="messageType" />
@@ -39,11 +39,11 @@
         <table class="w-full min-w-[680px] border-collapse text-left text-sm">
           <thead>
             <tr class="border-b border-gray-200 text-gray-500">
-              <th class="py-3 pr-4 font-medium">Name</th>
-              <th class="py-3 pr-4 font-medium">Geschlecht</th>
-              <th class="py-3 pr-4 font-medium">Gesundheit</th>
-              <th class="py-3 pr-4 font-medium">Schule</th>
-              <th class="py-3 pr-0 text-right font-medium">Aktionen</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.name') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('children.gender') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('children.health') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('children.school') }}</th>
+              <th class="py-3 pr-0 text-right font-medium">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -69,6 +69,7 @@ import type { ChildRequest, ChildResponse } from '~/types/api'
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const { t } = useI18n()
 const pending = ref(false)
 const saving = ref(false)
 const children = ref<ChildResponse[]>([])
@@ -104,7 +105,7 @@ const loadChildren = async () => {
   try {
     children.value = await api<ChildResponse[]>('children')
   } catch {
-    showMessage('Kinder konnten nicht geladen werden.', 'error')
+    showMessage(t('children.loadError'), 'error')
   } finally {
     pending.value = false
   }
@@ -134,35 +135,35 @@ const saveChild = async () => {
         method: 'PUT',
         body: { ...form },
       })
-      showMessage('Kind wurde aktualisiert.', 'success')
+      showMessage(t('children.updated'), 'success')
     } else {
       await api<ChildResponse>('children', {
         method: 'POST',
         body: { ...form },
       })
-      showMessage('Kind wurde erfasst.', 'success')
+      showMessage(t('children.created'), 'success')
     }
 
     resetForm()
     await loadChildren()
   } catch {
-    showMessage('Speichern fehlgeschlagen.', 'error')
+    showMessage(t('children.saveError'), 'error')
   } finally {
     saving.value = false
   }
 }
 
 const deleteChild = async (child: ChildResponse) => {
-  if (!child.id || !confirm(`Eintrag "${child.name || child.id}" loeschen?`)) {
+  if (!child.id || !confirm(t('children.confirmDelete', { name: child.name || child.id }))) {
     return
   }
 
   try {
     await api<void>(`children/${child.id}`, { method: 'DELETE' })
-    showMessage('Kind wurde geloescht.', 'success')
+    showMessage(t('children.deleted'), 'success')
     await loadChildren()
   } catch {
-    showMessage('Loeschen fehlgeschlagen.', 'error')
+    showMessage(t('children.deleteError'), 'error')
   }
 }
 
