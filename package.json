@@ -7,7 +7,9 @@
     "dev": "nuxt dev --host 127.0.0.1 --port 3001",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "mock:api": "node mock/server.mjs",
+    "dev:mock": "nuxt dev --host 127.0.0.1 --port 3001 --dotenv .env.mock"
   },
   "dependencies": {
     "@nuxt/ui": "latest",
@@ -17,6 +19,7 @@
     "vue-router": "latest"
   },
   "devDependencies": {
+    "@nuxt/kit": "^4.4.8",
     "@types/node": "^25.9.3",
     "typescript": "latest"
   }

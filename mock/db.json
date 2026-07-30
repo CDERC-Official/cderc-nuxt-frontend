@@ -1,0 +1,79 @@
+{
+  "children": [
+    {
+      "id": 1,
+      "name": "Amina K.",
+      "gender": "weiblich",
+      "healthStatus": "stabil",
+      "schoolStatus": "Volksschule",
+      "organizationId": 1
+    },
+    {
+      "id": 2,
+      "name": "Jonas M.",
+      "gender": "maennlich",
+      "healthStatus": "regelmaessige Kontrolle",
+      "schoolStatus": "Mittelschule",
+      "organizationId": 1
+    },
+    {
+      "id": 3,
+      "name": "Sara T.",
+      "gender": "weiblich",
+      "healthStatus": "in Behandlung",
+      "schoolStatus": "Vorschule",
+      "organizationId": 2
+    }
+  ],
+  "organizations": [
+    {
+      "id": 1,
+      "name": "CDERC Graz",
+      "email": "office@cderc.local",
+      "logo": "",
+      "themeColor": "#16a34a"
+    },
+    {
+      "id": 2,
+      "name": "Partner Wien",
+      "email": "kontakt@partner.local",
+      "logo": "",
+      "themeColor": "#2563eb"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Super Admin",
+      "email": "admin@cderc.local",
+      "role": "SUPER_ADMIN",
+      "organization": null
+    },
+    {
+      "id": 2,
+      "name": "Admin Graz",
+      "email": "graz.admin@cderc.local",
+      "role": "ADMIN",
+      "organization": {
+        "id": 1,
+        "name": "CDERC Graz",
+        "email": "office@cderc.local",
+        "logo": "",
+        "themeColor": "#16a34a"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Social Worker",
+      "email": "social@cderc.local",
+      "role": "SOCIAL_WORKER",
+      "organization": {
+        "id": 1,
+        "name": "CDERC Graz",
+        "email": "office@cderc.local",
+        "logo": "",
+        "themeColor": "#16a34a"
+      }
+    }
+  ]
+}
