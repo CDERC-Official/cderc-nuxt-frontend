@@ -2,13 +2,13 @@
   <UCard>
     <template #header>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-base font-semibold text-gray-950">{{ title || t('common.list') }}</h2>
+        <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ title || t('common.list') }}</h2>
         <UInput v-model="query" icon="i-lucide-search" :placeholder="t('common.search')" class="w-full sm:w-64" />
       </div>
     </template>
 
     <LoadingRows v-if="loading" :count="loadingRows" />
-    <div v-else-if="empty" class="py-10 text-center text-sm text-gray-500">
+    <div v-else-if="empty" class="py-10 text-center text-sm text-gray-500 dark:text-gray-400">
       {{ emptyText || t('common.noEntries') }}
     </div>
     <div v-else class="overflow-x-auto">
@@ -38,3 +38,4 @@ withDefaults(
   },
 )
 </script>
+

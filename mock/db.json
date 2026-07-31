@@ -47,33 +47,90 @@
       "name": "Super Admin",
       "email": "admin@cderc.local",
       "role": "SUPER_ADMIN",
-      "organization": null
+      "organizationId": null
     },
     {
       "id": 2,
       "name": "Admin Graz",
       "email": "graz.admin@cderc.local",
       "role": "ADMIN",
-      "organization": {
-        "id": 1,
-        "name": "CDERC Graz",
-        "email": "office@cderc.local",
-        "logo": "",
-        "themeColor": "#16a34a"
-      }
+      "organizationId": 1
     },
     {
       "id": 3,
       "name": "Social Worker",
       "email": "social@cderc.local",
       "role": "SOCIAL_WORKER",
-      "organization": {
-        "id": 1,
-        "name": "CDERC Graz",
-        "email": "office@cderc.local",
-        "logo": "",
-        "themeColor": "#16a34a"
-      }
+      "organizationId": 1
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "title": "Sommerfest",
+      "eventDate": "2026-08-15",
+      "location": "CDERC Graz",
+      "description": "Gemeinsames Sommerfest mit Kindern und Familien.",
+      "organizationId": 1
+    },
+    {
+      "id": 2,
+      "title": "Schulstart Workshop",
+      "eventDate": "2026-09-05",
+      "location": "Partner Wien",
+      "description": "Materialausgabe und Beratung zum Schulstart.",
+      "organizationId": 1
+    },
+    {
+      "id": 3,
+      "title": "Schulanfang",
+      "eventDate": "2026-08-29",
+      "location": "Lome",
+      "description": "CDERC Österreich organisiert in Kooperation mit CDERC La Grâce (Togo) am 29. August 2026 eine Schulanfangsaktion für Kinder aus sozial benachteiligten Familien."
+    }
+  ],
+  "eventExpenses": [
+    {
+      "id": 1,
+      "title": "Getraenke",
+      "amount": 85.5,
+      "expenseDate": "2026-08-10",
+      "category": "DRINKS",
+      "description": "Wasser und Saft",
+      "eventId": 1,
+      "eventTitle": "Sommerfest"
+    },
+    {
+      "id": 2,
+      "title": "Raummiete",
+      "amount": 120,
+      "expenseDate": "2026-08-12",
+      "category": "RENT",
+      "description": "Gemeindesaal",
+      "eventId": 1,
+      "eventTitle": "Sommerfest"
+    }
+  ],
+  "expenses": [
+    {
+      "id": 1,
+      "title": "Schulhefte",
+      "amount": 24.9,
+      "expenseDate": "2026-07-20",
+      "category": "SCHOOL_MATERIAL",
+      "description": "Hefte und Stifte",
+      "childId": 1,
+      "childName": "Amina K."
+    },
+    {
+      "id": 2,
+      "title": "Kontrolltermin",
+      "amount": 45,
+      "expenseDate": "2026-07-22",
+      "category": "HEALTH",
+      "description": "Arztbesuch",
+      "childId": 2,
+      "childName": "Jonas M."
     }
   ]
 }

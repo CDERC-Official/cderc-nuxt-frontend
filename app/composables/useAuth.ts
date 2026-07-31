@@ -1,25 +1,92 @@
-import type { AuthResponse, LoginRequest } from '~/types/api'
+﻿import type { AuthResponse, LoginRequest, User, UserRole } from '~/types/api'
 
 export const AUTH_TOKEN_KEY = 'cderc.auth.token'
+export const AUTH_USER_KEY = 'cderc.auth.user'
+
+interface JwtPayload {
+  sub?: string
+  email?: string
+  name?: string
+  role?: UserRole | string
+  exp?: number
+  userId?: number
+  id?: number
+  organizationId?: number
+}
+
+const decodeJwtPayload = (token: string): JwtPayload | null => {
+  if (!import.meta.client) return null
+
+  try {
+    const [, payload] = token.split('.')
+    if (!payload) return null
+
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    return JSON.parse(decodeURIComponent(escape(atob(padded)))) as JwtPayload
+  } catch {
+    return null
+  }
+}
+
+const userFromToken = (token: string): User | null => {
+  const payload = decodeJwtPayload(token)
+  if (!payload) return null
+
+  return {
+    id: payload.userId || payload.id,
+    email: payload.email || payload.sub,
+    name: payload.name || payload.email || payload.sub,
+    role: payload.role as UserRole | undefined,
+    organizationId: payload.organizationId,
+  }
+}
 
 export function useAuth() {
   const token = useState<string | null>('auth-token', () => null)
+  const user = useState<User | null>('auth-user', () => null)
 
-  const loadToken = () => {
-    if (import.meta.client) {
-      token.value = localStorage.getItem(AUTH_TOKEN_KEY)
+  const setUser = (value: User | null) => {
+    user.value = value
+    if (!import.meta.client) return
+
+    if (value) {
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(value))
+    } else {
+      localStorage.removeItem(AUTH_USER_KEY)
     }
   }
 
-  const setToken = (value: string) => {
+  const setToken = (value: string, nextUser?: User | null) => {
     token.value = value
     if (import.meta.client) {
       localStorage.setItem(AUTH_TOKEN_KEY, value)
     }
+    setUser(nextUser || userFromToken(value))
+  }
+
+  const loadToken = () => {
+    if (!import.meta.client) return
+
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY)
+    token.value = savedToken
+
+    const savedUser = localStorage.getItem(AUTH_USER_KEY)
+    if (savedUser) {
+      try {
+        user.value = JSON.parse(savedUser) as User
+        return
+      } catch {
+        localStorage.removeItem(AUTH_USER_KEY)
+      }
+    }
+
+    user.value = savedToken ? userFromToken(savedToken) : null
   }
 
   const clearToken = () => {
     token.value = null
+    setUser(null)
     if (import.meta.client) {
       localStorage.removeItem(AUTH_TOKEN_KEY)
     }
@@ -33,16 +100,19 @@ export function useAuth() {
     })
 
     if (response.token) {
-      setToken(response.token)
+      setToken(response.token, response.user || null)
     }
 
     return response
   }
 
   const isLoggedIn = computed(() => Boolean(token.value))
+  const userRole = computed(() => user.value?.role)
 
   return {
     token,
+    user,
+    userRole,
     isLoggedIn,
     loadToken,
     login,

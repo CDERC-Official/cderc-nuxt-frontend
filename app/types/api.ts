@@ -1,4 +1,4 @@
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SOCIAL_WORKER' | 'VOLUNTEER' | 'USER'
+﻿export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SOCIAL_WORKER' | 'VOLUNTEER' | 'USER'
 
 export interface Organization {
   id?: number
@@ -32,6 +32,7 @@ export interface User {
   email?: string
   password?: string
   role?: UserRole
+  organizationId?: number
   organization?: Organization
 }
 
@@ -56,4 +57,78 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token?: string
+  user?: User
 }
+
+export interface ApiError extends Error {
+  statusCode?: number
+  data?: unknown
+}
+export type ExpenseCategory = 'SCHOOL_FEE' | 'SCHOOL_MATERIAL' | 'FOOD' | 'HEALTH' | 'CLOTHES' | 'TRANSPORT' | 'OTHER'
+export type EventExpenseCategory = 'FOOD' | 'TRANSPORT' | 'MATERIAL' | 'RENT' | 'DRINKS' | 'MEDIA' | 'DECORATION' | 'OTHER'
+
+export interface EventRequest {
+  title?: string
+  eventDate?: string
+  location?: string
+  description?: string
+}
+
+export interface EventResponse extends EventRequest {
+  id?: number
+  organizationId?: number
+}
+
+export interface ExpenseRequest {
+  title?: string
+  amount?: number
+  expenseDate?: string
+  category?: ExpenseCategory
+  description?: string
+}
+
+export interface ExpenseResponse extends ExpenseRequest {
+  id?: number
+  childId?: number
+  childName?: string
+}
+
+export interface EventExpenseRequest {
+  title?: string
+  amount?: number
+  expenseDate?: string
+  category?: EventExpenseCategory
+  description?: string
+}
+
+export interface EventExpenseResponse extends EventExpenseRequest {
+  id?: number
+  eventId?: number
+  eventTitle?: string
+}
+
+export interface ChildExpenseSummaryResponse {
+  id?: number
+  name?: string
+  totalExpenses?: number
+}
+
+export interface EventTotalReportResponse {
+  eventId?: number
+  eventTitle?: string
+  totalExpenses?: number
+}
+export interface CategoryReportResponse {
+  category?: string
+  total?: number
+}
+
+export interface YearReportResponse {
+  year?: number
+  total?: number
+}
+
+export interface OrganizationTotalReportResponse {
+  totalExpenses?: number
+}
+

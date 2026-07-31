@@ -3,20 +3,26 @@
     v-if="message"
     :color="type"
     variant="soft"
-    :icon="type === 'success' ? 'i-lucide-circle-check' : 'i-lucide-circle-alert'"
+    :icon="iconName"
     :description="message"
   />
 </template>
 
 <script setup lang="ts">
-withDefaults(
+const props = withDefaults(
   defineProps<{
     message?: string
-    type?: 'success' | 'error'
+    type?: 'success' | 'error' | 'warning'
   }>(),
   {
     message: '',
     type: 'success',
   },
 )
+
+const iconName = computed(() => {
+  if (props.type === 'success') return 'i-lucide-circle-check'
+  if (props.type === 'warning') return 'i-lucide-info'
+  return 'i-lucide-circle-alert'
+})
 </script>

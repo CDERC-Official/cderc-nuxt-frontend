@@ -2,9 +2,9 @@
   <section class="page-shell grid min-h-[calc(100vh-128px)] items-center">
     <div class="mx-auto w-full max-w-md">
       <div class="mb-8">
-        <p class="text-sm font-medium uppercase tracking-wide text-primary-700">CDERC</p>
-        <h1 class="mt-2 text-3xl font-semibold text-gray-950">{{ t('login.title') }}</h1>
-        <p class="mt-2 text-sm text-gray-600">{{ t('login.subtitle') }}</p>
+        <p class="text-sm font-medium uppercase tracking-wide text-primary-700 dark:text-primary-300">CDERC</p>
+        <h1 class="mt-2 text-3xl font-semibold text-gray-950 dark:text-white">{{ t('login.title') }}</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ t('login.subtitle') }}</p>
       </div>
 
       <UCard>
@@ -80,3 +80,4 @@ const submit = async () => {
   }
 }
 </script>
+

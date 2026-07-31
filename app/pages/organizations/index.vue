@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell space-y-6">
     <PageHeader :eyebrow="t('organizations.eyebrow')" :title="t('organizations.title')">
       <template #actions>
@@ -6,10 +6,12 @@
       </template>
     </PageHeader>
 
-    <div class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+    <FeedbackAlert v-if="isForbidden" :message="message" :type="messageType" />
+
+    <div v-if="!isForbidden" class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <UCard>
         <template #header>
-          <h2 class="text-base font-semibold text-gray-950">
+          <h2 class="text-base font-semibold text-gray-950 dark:text-white">
             {{ editingId ? t('organizations.editTitle') : t('organizations.createTitle') }}
           </h2>
         </template>
@@ -48,7 +50,7 @@
       >
         <table class="w-full min-w-[720px] border-collapse text-left text-sm">
           <thead>
-            <tr class="border-b border-gray-200 text-gray-500">
+            <tr class="border-b border-gray-200 text-gray-500 dark:border-gray-800 dark:text-gray-400">
               <th class="py-3 pr-4 font-medium">{{ t('common.name') }}</th>
               <th class="py-3 pr-4 font-medium">{{ t('common.email') }}</th>
               <th class="py-3 pr-4 font-medium">{{ t('common.color') }}</th>
@@ -56,12 +58,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="organization in filteredOrganizations" :key="organization.id" class="border-b border-gray-100">
-              <td class="py-3 pr-4 font-medium text-gray-950">{{ organization.name || '-' }}</td>
-              <td class="py-3 pr-4 text-gray-600">{{ organization.email || '-' }}</td>
+            <tr v-for="organization in filteredOrganizations" :key="organization.id" class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-3 pr-4 font-medium text-gray-950 dark:text-white">{{ organization.name || '-' }}</td>
+              <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ organization.email || '-' }}</td>
               <td class="py-3 pr-4">
-                <span class="inline-flex items-center gap-2 text-gray-600">
-                  <span class="size-4 rounded border border-gray-200" :style="{ backgroundColor: organization.themeColor || '#e5e7eb' }" />
+                <span class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <span class="size-4 rounded border border-gray-200 dark:border-gray-700" :style="{ backgroundColor: organization.themeColor || '#e5e7eb' }" />
                   {{ organization.themeColor || '-' }}
                 </span>
               </td>
@@ -77,11 +79,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Organization } from '~/types/api'
+import type { ApiError, Organization } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const auth = useAuth()
 const { t } = useI18n()
 const pending = ref(false)
 const saving = ref(false)
@@ -89,7 +92,9 @@ const organizations = ref<Organization[]>([])
 const query = ref('')
 const editingId = ref<number | null>(null)
 const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
+const messageType = ref<'success' | 'error' | 'warning'>('success')
+const isForbidden = ref(false)
+const isSuperAdmin = computed(() => auth.userRole.value === 'SUPER_ADMIN')
 const form = reactive<Organization>({
   name: '',
   email: '',
@@ -108,17 +113,29 @@ const filteredOrganizations = computed(() => {
   )
 })
 
-const showMessage = (text: string, type: 'success' | 'error') => {
+const showMessage = (text: string, type: 'success' | 'error' | 'warning') => {
   message.value = text
   messageType.value = type
 }
 
 const loadOrganizations = async () => {
+  auth.loadToken()
+  isForbidden.value = false
+
+  if (!isSuperAdmin.value) {
+    organizations.value = []
+    isForbidden.value = true
+    showMessage(t('organizations.forbidden'), 'warning')
+    return
+  }
+
   pending.value = true
   try {
     organizations.value = await api<Organization[]>('super-admin/organizations')
-  } catch {
-    showMessage(t('organizations.loadError'), 'error')
+  } catch (error) {
+    const apiError = error as ApiError
+    isForbidden.value = apiError.statusCode === 403
+    showMessage(isForbidden.value ? t('organizations.forbidden') : t('organizations.loadError'), isForbidden.value ? 'warning' : 'error')
   } finally {
     pending.value = false
   }
