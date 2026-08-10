@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { creatableUserRoles } from '~/types/api'
-import type { CreateAdminRequest, CreateUserRequest, Organization, User, UserRole } from '~/types/api'
+import type { ApiError, CreateAdminRequest, CreateUserRequest, Organization, User, UserRole } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -175,6 +175,19 @@ const showMessage = (text: string, type: 'success' | 'error') => {
   messageType.value = type
 }
 
+const createOrganizationAdmin = async (selectedOrganizationId: number, request: CreateAdminRequest) => {
+  try {
+    return await api<User>(`super-admin/organizations/${selectedOrganizationId}/admins`, { method: 'POST', body: request })
+  } catch (error) {
+    const apiError = error as ApiError
+    if (apiError.statusCode !== 404 && apiError.statusCode !== 405) {
+      throw error
+    }
+
+    return await api<User>(`super-admin/users/organizations/${selectedOrganizationId}/admins`, { method: 'POST', body: request })
+  }
+}
+
 const loadUsers = async () => {
   pending.value = true
   try {
@@ -210,12 +223,17 @@ const saveUser = async () => {
   saving.value = true
   try {
     if (form.role === 'ADMIN') {
+      const selectedOrganizationId = organizationId.value
+      if (!selectedOrganizationId) {
+        throw new Error(t('users.organizationRequired'))
+      }
+
       const request: CreateAdminRequest = {
         name: form.name?.trim(),
         email: form.email?.trim(),
         password: form.password,
       }
-      await api<User>(`super-admin/organizations/${organizationId.value}/admins`, { method: 'POST', body: request })
+      await createOrganizationAdmin(selectedOrganizationId, request)
     } else {
       const request: CreateUserRequest = {
         name: form.name?.trim(),
@@ -229,8 +247,9 @@ const saveUser = async () => {
     showMessage(t('users.created'), 'success')
     resetForm()
     await loadUsers()
-  } catch {
-    showMessage(t('users.createError'), 'error')
+  } catch (error) {
+    const apiError = error as ApiError
+    showMessage(apiError.message || t('users.createError'), 'error')
   } finally {
     saving.value = false
   }
