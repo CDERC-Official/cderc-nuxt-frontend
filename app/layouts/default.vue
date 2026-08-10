@@ -118,7 +118,9 @@ const navItems = computed(() => [
   { label: t('nav.events'), to: '/events', icon: 'i-lucide-calendar-days' },
   { label: t('nav.expenses'), to: '/expenses', icon: 'i-lucide-receipt' },
   { label: t('nav.reports'), to: '/reports', icon: 'i-lucide-chart-column' },
-  { label: t('nav.organizations'), to: '/organizations', icon: 'i-lucide-building-2' },
+  ...(auth.isSuperAdmin.value
+    ? [{ label: t('nav.organizations'), to: '/organizations', icon: 'i-lucide-building-2' }]
+    : []),
   { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
   { label: t('nav.apiExplorer'), to: '/api-explorer', icon: 'i-lucide-braces' },
 ])

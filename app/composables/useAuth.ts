@@ -8,11 +8,16 @@ interface JwtPayload {
   email?: string
   name?: string
   role?: UserRole | string
+  roles?: string[]
+  authorities?: string[]
   exp?: number
   userId?: number
   id?: number
   organizationId?: number
+  organization?: { id?: number }
 }
+
+const normalizeRole = (value?: string | null) => value?.replace(/^ROLE_/, '') as UserRole | undefined
 
 const decodeJwtPayload = (token: string): JwtPayload | null => {
   if (!import.meta.client) return null
@@ -37,8 +42,8 @@ const userFromToken = (token: string): User | null => {
     id: payload.userId || payload.id,
     email: payload.email || payload.sub,
     name: payload.name || payload.email || payload.sub,
-    role: payload.role as UserRole | undefined,
-    organizationId: payload.organizationId,
+    role: normalizeRole(payload.role || payload.roles?.[0] || payload.authorities?.[0]),
+    organizationId: payload.organizationId || payload.organization?.id,
   }
 }
 
@@ -107,13 +112,19 @@ export function useAuth() {
   }
 
   const isLoggedIn = computed(() => Boolean(token.value))
-  const userRole = computed(() => user.value?.role)
+  const userRole = computed(() => normalizeRole(user.value?.role))
+  const organizationId = computed(() => user.value?.organizationId || user.value?.organization?.id || null)
+  const isSuperAdmin = computed(() => userRole.value === 'SUPER_ADMIN')
+  const isAdmin = computed(() => userRole.value === 'ADMIN' || isSuperAdmin.value)
 
   return {
     token,
     user,
     userRole,
+    organizationId,
     isLoggedIn,
+    isSuperAdmin,
+    isAdmin,
     loadToken,
     login,
     logout: clearToken,

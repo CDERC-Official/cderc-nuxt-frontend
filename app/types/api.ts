@@ -1,4 +1,8 @@
-﻿export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'SOCIAL_WORKER' | 'VOLUNTEER' | 'USER'
+export const userRoles = ['SUPER_ADMIN', 'ADMIN', 'SOCIAL_WORKER', 'VOLUNTEER', 'USER'] as const
+export const creatableUserRoles = ['ADMIN', 'SOCIAL_WORKER', 'VOLUNTEER', 'USER'] as const
+
+export type UserRole = typeof userRoles[number]
+export type CreatableUserRole = typeof creatableUserRoles[number]
 
 export interface Organization {
   id?: number
@@ -47,7 +51,7 @@ export interface CreateUserRequest {
   name?: string
   email?: string
   password?: string
-  role?: UserRole
+  role?: CreatableUserRole
 }
 
 export interface LoginRequest {

@@ -100,13 +100,14 @@
 </template>
 
 <script setup lang="ts">
+import { creatableUserRoles } from '~/types/api'
 import type { CreateAdminRequest, CreateUserRequest, Organization, User, UserRole } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
 const { t } = useI18n()
-const roles: UserRole[] = ['ADMIN', 'SOCIAL_WORKER', 'VOLUNTEER', 'USER']
+const roles = creatableUserRoles
 const pending = ref(false)
 const saving = ref(false)
 const submitted = ref(false)
