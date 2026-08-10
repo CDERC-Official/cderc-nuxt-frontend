@@ -112,18 +112,26 @@ const colorMode = useColorMode()
 const { t, locale, setLocale } = useI18n()
 const menuOpen = ref(false)
 
-const navItems = computed(() => [
-  { label: t('nav.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
-  { label: t('nav.children'), to: '/children', icon: 'i-lucide-heart-handshake' },
-  { label: t('nav.events'), to: '/events', icon: 'i-lucide-calendar-days' },
-  { label: t('nav.expenses'), to: '/expenses', icon: 'i-lucide-receipt' },
-  { label: t('nav.reports'), to: '/reports', icon: 'i-lucide-chart-column' },
-  ...(auth.isSuperAdmin.value
-    ? [{ label: t('nav.organizations'), to: '/organizations', icon: 'i-lucide-building-2' }]
-    : []),
-  { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
-  { label: t('nav.apiExplorer'), to: '/api-explorer', icon: 'i-lucide-braces' },
-])
+const navItems = computed(() => {
+  if (auth.isSuperAdmin.value) {
+    return [
+      { label: t('nav.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
+      { label: t('nav.organizations'), to: '/organizations', icon: 'i-lucide-building-2' },
+      { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
+      { label: t('nav.apiExplorer'), to: '/api-explorer', icon: 'i-lucide-braces' },
+    ]
+  }
+
+  return [
+    { label: t('nav.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
+    { label: t('nav.children'), to: '/children', icon: 'i-lucide-heart-handshake' },
+    { label: t('nav.events'), to: '/events', icon: 'i-lucide-calendar-days' },
+    { label: t('nav.expenses'), to: '/expenses', icon: 'i-lucide-receipt' },
+    { label: t('nav.reports'), to: '/reports', icon: 'i-lucide-chart-column' },
+    { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
+    { label: t('nav.apiExplorer'), to: '/api-explorer', icon: 'i-lucide-braces' },
+  ]
+})
 
 const localeOptions = [
   { code: 'de' as const, label: 'DE' },

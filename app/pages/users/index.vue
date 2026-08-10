@@ -106,8 +106,9 @@ import type { CreateAdminRequest, CreateUserRequest, Organization, User, UserRol
 definePageMeta({ middleware: 'auth' })
 
 const api = useApi()
+const auth = useAuth()
 const { t } = useI18n()
-const roles = creatableUserRoles
+const roles = computed(() => auth.isSuperAdmin.value ? creatableUserRoles : creatableUserRoles.filter((role) => role !== 'ADMIN'))
 const pending = ref(false)
 const saving = ref(false)
 const submitted = ref(false)
@@ -198,7 +199,7 @@ const resetForm = () => {
   form.name = ''
   form.email = ''
   form.password = ''
-  form.role = 'USER'
+  form.role = auth.isSuperAdmin.value ? 'ADMIN' : 'USER'
   organizationId.value = undefined
 }
 
@@ -236,6 +237,8 @@ const saveUser = async () => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadUsers(), loadOrganizations()])
+  auth.loadToken()
+  resetForm()
+  await Promise.all([loadUsers(), auth.isSuperAdmin.value ? loadOrganizations() : Promise.resolve()])
 })
 </script>

@@ -115,7 +115,7 @@ export function useAuth() {
   const userRole = computed(() => normalizeRole(user.value?.role))
   const organizationId = computed(() => user.value?.organizationId || user.value?.organization?.id || null)
   const isSuperAdmin = computed(() => userRole.value === 'SUPER_ADMIN')
-  const isAdmin = computed(() => userRole.value === 'ADMIN' || isSuperAdmin.value)
+  const isAdmin = computed(() => userRole.value === 'ADMIN')
 
   return {
     token,

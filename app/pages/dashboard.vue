@@ -2,7 +2,8 @@
   <section class="page-shell space-y-6">
     <PageHeader eyebrow="Uebersicht" title="Dashboard">
       <template #actions>
-        <UButton to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
+        <UButton v-if="auth.isSuperAdmin.value" to="/organizations" icon="i-lucide-building-2">Organisation erfassen</UButton>
+        <UButton v-else to="/children" icon="i-lucide-plus">Kind erfassen</UButton>
       </template>
     </PageHeader>
 
@@ -19,7 +20,7 @@
     </div>
 
     <section class="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-      <UCard>
+      <UCard v-if="!auth.isSuperAdmin.value">
         <template #header>
           <div class="flex items-center justify-between gap-3">
             <h2 class="text-base font-semibold text-gray-950">Aktuelle Kinder</h2>
@@ -33,9 +34,19 @@
 
       <UCard>
         <template #header>
-          <h2 class="text-base font-semibold text-gray-950">Backend</h2>
+          <h2 class="text-base font-semibold text-gray-950">{{ auth.isSuperAdmin.value ? 'Organisationen' : 'Backend' }}</h2>
         </template>
-        <div class="space-y-4">
+        <div v-if="auth.isSuperAdmin.value" class="space-y-3">
+          <div v-for="organization in organizations.slice(0, 6)" :key="organization.id" class="flex items-center justify-between gap-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-gray-950">{{ organization.name || '-' }}</p>
+              <p class="truncate text-xs text-gray-500">{{ organization.email || '-' }}</p>
+            </div>
+            <UButton to="/organizations" icon="i-lucide-arrow-right" size="sm" variant="ghost" color="neutral" />
+          </div>
+          <p v-if="organizations.length === 0" class="text-sm text-gray-500">Keine Organisationen gefunden.</p>
+        </div>
+        <div v-else class="space-y-4">
           <div>
             <p class="text-sm text-gray-500">API Basis</p>
             <p class="mt-1 break-all text-sm font-medium text-gray-900">{{ apiBase }}</p>
@@ -72,8 +83,8 @@ const columns: TableColumn<ChildResponse>[] = [
 const childrenPreview = computed(() => children.value.slice(0, 5))
 
 const metrics = computed(() => [
-  { label: 'Kinder', value: children.value.length, icon: 'i-lucide-heart-handshake' },
-  { label: 'Organisationen', value: organizations.value.length, icon: 'i-lucide-building-2' },
+  ...(auth.isSuperAdmin.value ? [] : [{ label: 'Kinder', value: children.value.length, icon: 'i-lucide-heart-handshake' }]),
+  ...(auth.isSuperAdmin.value ? [{ label: 'Organisationen', value: organizations.value.length, icon: 'i-lucide-building-2' }] : []),
   { label: 'Nutzer', value: users.value.length, icon: 'i-lucide-users' },
 ])
 
@@ -82,9 +93,9 @@ onMounted(async () => {
 
   try {
     const [childrenResult, organizationsResult, usersResult] = await Promise.allSettled([
-      api<ChildResponse[]>('children'),
+      auth.isSuperAdmin.value ? Promise.resolve([]) : api<ChildResponse[]>('children'),
       auth.isSuperAdmin.value ? api<Organization[]>('super-admin/organizations') : Promise.resolve([]),
-      api<User[]>('users'),
+      auth.isSuperAdmin.value ? Promise.resolve([]) : api<User[]>('users'),
     ])
 
     if (childrenResult.status === 'fulfilled') {
