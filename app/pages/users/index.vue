@@ -191,9 +191,35 @@ const createOrganizationAdmin = async (selectedOrganizationId: number, request: 
 const loadUsers = async () => {
   pending.value = true
   try {
-    users.value = await api<User[]>('users')
-  } catch {
-    showMessage(t('users.loadError'), 'error')
+    if (auth.isSuperAdmin.value) {
+      if (organizations.value.length === 0) {
+        await loadOrganizations()
+      }
+
+      const userResults = await Promise.allSettled(
+        organizations.value
+          .filter((organization) => organization.id)
+          .map((organization) => api<User[]>(`users/${organization.id}`)),
+      )
+
+      users.value = userResults.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
+      if (userResults.some((result) => result.status === 'rejected')) {
+        showMessage(t('dashboard.partialLoad'), 'error')
+      }
+      return
+    }
+
+    if (!auth.organizationId.value) {
+      users.value = []
+      showMessage(t('users.loadError'), 'error')
+      return
+    }
+
+    users.value = await api<User[]>(`users/${auth.organizationId.value}`)
+  } catch (error) {
+    users.value = []
+    const apiError = error as ApiError
+    showMessage(apiError.message || t('users.loadError'), 'error')
   } finally {
     pending.value = false
   }
@@ -258,6 +284,9 @@ const saveUser = async () => {
 onMounted(async () => {
   auth.loadToken()
   resetForm()
-  await Promise.all([loadUsers(), auth.isSuperAdmin.value ? loadOrganizations() : Promise.resolve()])
+  if (auth.isSuperAdmin.value) {
+    await loadOrganizations()
+  }
+  await loadUsers()
 })
 </script>
