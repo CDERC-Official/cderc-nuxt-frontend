@@ -213,9 +213,8 @@ const saveUser = async () => {
         name: form.name?.trim(),
         email: form.email?.trim(),
         password: form.password,
-        organizationId: organizationId.value,
       }
-      await api<User>('super-admin/users/admins', { method: 'POST', body: request })
+      await api<User>(`super-admin/organizations/${organizationId.value}/admins`, { method: 'POST', body: request })
     } else {
       const request: CreateUserRequest = {
         name: form.name?.trim(),

@@ -124,9 +124,17 @@ const server = createServer(async (req, res) => {
       return
     }
 
-    if (req.method === 'POST' && pathname === '/super-admin/users/admins') {
+    const organizationAdminMatch = pathname.match(/^\/super-admin\/organizations\/(\d+)\/admins$/)
+    if (req.method === 'POST' && organizationAdminMatch) {
       const body = await readBody(req)
-      const user = userWithOrganization(db, body, 'ADMIN')
+      const organizationId = Number(organizationAdminMatch[1])
+      const organization = findOrganization(db, organizationId)
+      if (!organization) {
+        sendJson(res, 404, { message: 'Organization not found' })
+        return
+      }
+
+      const user = userWithOrganization(db, { ...body, organizationId }, 'ADMIN')
       db.users.push(user)
       await writeDb(db)
       sendJson(res, 201, user)
