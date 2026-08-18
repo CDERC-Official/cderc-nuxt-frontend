@@ -69,6 +69,8 @@ export interface ApiError extends Error {
 }
 export type ExpenseCategory = 'SCHOOL_FEE' | 'SCHOOL_MATERIAL' | 'FOOD' | 'HEALTH' | 'CLOTHES' | 'TRANSPORT' | 'OTHER'
 export type EventExpenseCategory = 'FOOD' | 'TRANSPORT' | 'MATERIAL' | 'RENT' | 'DRINKS' | 'MEDIA' | 'DECORATION' | 'OTHER'
+export type MemberStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'CANCELLED'
+export type MemberType = 'REGULAR_MEMBER' | 'SUPPORTING_MEMBER' | 'VOLUNTEER' | 'BOARD_MEMBER' | 'DONOR'
 
 export interface EventRequest {
   title?: string
@@ -133,6 +135,25 @@ export interface YearReportResponse {
 
 export interface OrganizationTotalReportResponse {
   totalExpenses?: number
+}
+
+export interface MemberRequest {
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  address?: string
+  city?: string
+  country?: string
+  birthDate?: string
+  joinedAt?: string
+  status?: MemberStatus
+  type?: MemberType
+}
+
+export interface MemberResponse extends MemberRequest {
+  id?: number
+  organizationId?: number
 }
 
 export interface GenerateCleaningScheduleRequest {
