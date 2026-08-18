@@ -293,7 +293,7 @@ const saveUser = async () => {
 
       const request: CreateAdminRequest = {
         name: form.name?.trim(),
-        email: form.email?.trim(),
+        email: form.email?.trim().toLowerCase(),
         password: form.password,
       }
       if (editingId.value) {
@@ -304,7 +304,7 @@ const saveUser = async () => {
     } else {
       const request: CreateUserRequest = {
         name: form.name?.trim(),
-        email: form.email?.trim(),
+        email: form.email?.trim().toLowerCase(),
         password: form.password,
         role: form.role,
       }

@@ -71,7 +71,10 @@ const submit = async () => {
   pending.value = true
 
   try {
-    await auth.login(form)
+    await auth.login({
+      email: form.email.trim().toLowerCase(),
+      password: form.password,
+    })
     await navigateTo('/dashboard')
   } catch {
     error.value = t('login.failed')
