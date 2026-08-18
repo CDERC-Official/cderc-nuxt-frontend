@@ -135,3 +135,17 @@ export interface OrganizationTotalReportResponse {
   totalExpenses?: number
 }
 
+export interface GenerateCleaningScheduleRequest {
+  startDate?: string
+  numberOfWeeks?: number
+}
+
+export interface CleaningScheduleResponse {
+  id?: number
+  weekStart?: string
+  weekEnd?: string
+  personOneId?: number
+  personOneName?: string
+  personTwoId?: number
+  personTwoName?: string
+}

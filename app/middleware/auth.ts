@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   const superAdminPaths = ['/organizations']
-  const adminPaths = ['/children', '/events', '/expenses', '/reports']
+  const adminPaths = ['/children', '/events', '/cleaning-schedules', '/expenses', '/reports']
 
   if (auth.isLoggedIn.value && auth.isSuperAdmin.value && adminPaths.some((path) => to.path === path || to.path.startsWith(`${path}/`))) {
     return navigateTo('/organizations')

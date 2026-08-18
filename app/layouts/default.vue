@@ -126,6 +126,7 @@ const navItems = computed(() => {
     { label: t('nav.dashboard'), to: '/dashboard', icon: 'i-lucide-layout-dashboard' },
     { label: t('nav.children'), to: '/children', icon: 'i-lucide-heart-handshake' },
     { label: t('nav.events'), to: '/events', icon: 'i-lucide-calendar-days' },
+    { label: t('nav.cleaningSchedules'), to: '/cleaning-schedules', icon: 'i-lucide-sparkles' },
     { label: t('nav.expenses'), to: '/expenses', icon: 'i-lucide-receipt' },
     { label: t('nav.reports'), to: '/reports', icon: 'i-lucide-chart-column' },
     { label: t('nav.users'), to: '/users', icon: 'i-lucide-users' },
