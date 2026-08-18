@@ -226,6 +226,10 @@ export default defineI18nConfig(() => ({
         loadError: 'Putzplan konnte nicht geladen werden.',
         generated: 'Putzplan wurde generiert.',
         generateError: 'Putzplan konnte nicht generiert werden.',
+        downloadPdf: 'PDF herunterladen',
+        generatedAt: 'Erstellt am',
+        pdfError: 'PDF konnte nicht erstellt werden.',
+        pdfTitle: 'Putzplan',
         weeksRequired: 'Bitte mindestens eine Woche eingeben.',
         summary: {
           total: 'Wochen gesamt',
@@ -519,6 +523,10 @@ export default defineI18nConfig(() => ({
         loadError: 'Cleaning schedule could not be loaded.',
         generated: 'Cleaning schedule was generated.',
         generateError: 'Cleaning schedule could not be generated.',
+        downloadPdf: 'Download PDF',
+        generatedAt: 'Generated at',
+        pdfError: 'PDF could not be created.',
+        pdfTitle: 'Cleaning schedule',
         weeksRequired: 'Please enter at least one week.',
         summary: {
           total: 'Total weeks',

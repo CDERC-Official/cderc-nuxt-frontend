@@ -1,6 +1,6 @@
 ﻿export default defineNuxtConfig({
   ssr: false,
-  modules: ['@nuxt/ui', '@nuxtjs/i18n'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@sidebase/nuxt-pdf'],
   css: ['~/assets/css/main.css'],
   devtools: { enabled: false },
   runtimeConfig: {

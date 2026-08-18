@@ -2,6 +2,7 @@
   <section class="page-shell space-y-6">
     <PageHeader :eyebrow="t('cleaningSchedules.eyebrow')" :title="t('cleaningSchedules.title')">
       <template #actions>
+        <UButton icon="i-lucide-download" variant="soft" :loading="exportingPdf" :disabled="exportingPdf || filteredSchedules.length === 0" @click="downloadPdf">{{ t('cleaningSchedules.downloadPdf') }}</UButton>
         <UButton icon="i-lucide-refresh-cw" variant="soft" :loading="pending" @click="loadSchedules">{{ t('common.refresh') }}</UButton>
       </template>
     </PageHeader>
@@ -78,6 +79,33 @@
         </table>
       </EntityListCard>
     </div>
+
+    <div class="fixed -left-[10000px] top-0 w-[900px] bg-white p-8 text-gray-950" aria-hidden="true">
+      <div ref="pdfContent">
+        <div class="mb-6 border-b border-gray-300 pb-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">CDERC</p>
+          <h1 class="mt-1 text-2xl font-semibold text-gray-950">{{ t('cleaningSchedules.pdfTitle') }}</h1>
+          <p class="mt-2 text-sm text-gray-600">{{ t('cleaningSchedules.generatedAt') }}: {{ generatedAtLabel }}</p>
+        </div>
+
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b-2 border-gray-400">
+              <th class="py-3 pr-4 font-semibold">{{ t('cleaningSchedules.weekRange') }}</th>
+              <th class="py-3 pr-4 font-semibold">{{ t('cleaningSchedules.personOne') }}</th>
+              <th class="py-3 pr-0 font-semibold">{{ t('cleaningSchedules.personTwo') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="schedule in filteredSchedules" :key="`pdf-${schedule.id || schedule.weekStart}`" class="border-b border-gray-200">
+              <td class="py-3 pr-4 font-medium">{{ formatRange(schedule) }}</td>
+              <td class="py-3 pr-4">{{ schedule.personOneName || '-' }}</td>
+              <td class="py-3 pr-0">{{ schedule.personTwoName || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -90,9 +118,11 @@ const api = useApi()
 const { t, locale } = useI18n()
 const pending = ref(false)
 const generating = ref(false)
+const exportingPdf = ref(false)
 const submitted = ref(false)
 const schedules = ref<CleaningScheduleResponse[]>([])
 const query = ref('')
+const pdfContent = ref<HTMLElement | null>(null)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 const form = reactive<GenerateCleaningScheduleRequest>({
@@ -106,6 +136,7 @@ const canGenerate = computed(() => !startDateError.value && !weeksError.value)
 const emptyText = computed(() => query.value ? t('common.noEntries') : t('cleaningSchedules.noSchedules'))
 const nextSchedule = computed(() => schedules.value.find((schedule) => schedule.weekEnd && schedule.weekEnd >= today()))
 const nextScheduleLabel = computed(() => nextSchedule.value ? formatRange(nextSchedule.value) : '-')
+const generatedAtLabel = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()))
 const assignedPeopleCount = computed(() => {
   const people = new Set<number | string>()
   schedules.value.forEach((schedule) => {
@@ -166,6 +197,32 @@ const generateSchedules = async () => {
     showMessage(apiError.message || t('cleaningSchedules.generateError'), 'error')
   } finally {
     generating.value = false
+  }
+}
+
+const downloadPdf = async () => {
+  if (!pdfContent.value) return
+
+  exportingPdf.value = true
+  try {
+    await exportToPDF(
+      `cderc-putzplan-${new Date().toISOString().slice(0, 10)}.pdf`,
+      pdfContent.value,
+      {
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4',
+      },
+      {
+        margin: [28, 28, 28, 28],
+        width: 540,
+        windowWidth: 900,
+      },
+    )
+  } catch {
+    showMessage(t('cleaningSchedules.pdfError'), 'error')
+  } finally {
+    exportingPdf.value = false
   }
 }
 
