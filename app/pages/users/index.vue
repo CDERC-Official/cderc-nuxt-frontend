@@ -16,7 +16,7 @@
       <UCard>
         <template #header>
           <div class="space-y-1">
-            <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ t('users.createTitle') }}</h2>
+            <h2 class="text-base font-semibold text-gray-950 dark:text-white">{{ editingId ? 'Nutzer bearbeiten' : t('users.createTitle') }}</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('users.formHint') }}</p>
           </div>
         </template>
@@ -30,7 +30,7 @@
             <UInput v-model="form.email" icon="i-lucide-mail" type="email" placeholder="name@example.org" autocomplete="email" class="w-full" />
           </UFormField>
 
-          <UFormField :label="t('common.password')" required :error="submitted ? passwordError : ''" :hint="t('users.passwordHint')">
+          <UFormField :label="t('common.password')" :required="!editingId" :error="submitted ? passwordError : ''" :hint="editingId ? 'Leer lassen, um das Passwort beizubehalten.' : t('users.passwordHint')">
             <UInput v-model="form.password" icon="i-lucide-lock-keyhole" type="password" :placeholder="t('common.password')" autocomplete="new-password" class="w-full" />
           </UFormField>
 
@@ -51,7 +51,14 @@
 
           <FeedbackAlert :message="message" :type="messageType" />
 
-          <FormActions :submit-label="t('common.add')" submit-icon="i-lucide-user-plus" :loading="saving" :disabled="saving" />
+          <FormActions
+            :submit-label="editingId ? t('common.save') : t('common.add')"
+            :submit-icon="editingId ? 'i-lucide-save' : 'i-lucide-user-plus'"
+            :loading="saving"
+            :disabled="saving"
+            :show-cancel="Boolean(editingId)"
+            @cancel="resetForm"
+          />
         </form>
       </UCard>
 
@@ -71,6 +78,7 @@
               <UBadge color="neutral" variant="soft">{{ roleLabel(user.role) }}</UBadge>
             </div>
             <p class="mt-4 text-sm text-gray-600 dark:text-gray-300">{{ organizationName(user) }}</p>
+            <RowActions v-if="canManageUser(user)" class="mt-3" @edit="editUser(user)" @delete="deleteUser(user)" />
           </article>
         </div>
 
@@ -80,7 +88,8 @@
               <th class="py-3 pr-4 font-medium">{{ t('common.name') }}</th>
               <th class="py-3 pr-4 font-medium">{{ t('common.email') }}</th>
               <th class="py-3 pr-4 font-medium">{{ t('common.role') }}</th>
-              <th class="py-3 pr-0 font-medium">{{ t('common.organization') }}</th>
+              <th class="py-3 pr-4 font-medium">{{ t('common.organization') }}</th>
+              <th class="py-3 pr-0 text-right font-medium">{{ t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +99,10 @@
               <td class="py-3 pr-4">
                 <UBadge color="neutral" variant="soft">{{ roleLabel(user.role) }}</UBadge>
               </td>
-              <td class="py-3 pr-0 text-gray-600 dark:text-gray-300">{{ organizationName(user) }}</td>
+              <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ organizationName(user) }}</td>
+              <td class="py-3 pr-0">
+                <RowActions v-if="canManageUser(user)" @edit="editUser(user)" @delete="deleteUser(user)" />
+              </td>
             </tr>
           </tbody>
         </table>
@@ -101,7 +113,7 @@
 
 <script setup lang="ts">
 import { creatableUserRoles } from '~/types/api'
-import type { ApiError, CreateAdminRequest, CreateUserRequest, Organization, User, UserRole } from '~/types/api'
+import type { ApiError, CreatableUserRole, CreateAdminRequest, CreateUserRequest, Organization, User, UserRole } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -115,6 +127,7 @@ const submitted = ref(false)
 const users = ref<User[]>([])
 const organizations = ref<Organization[]>([])
 const query = ref('')
+const editingId = ref<number | null>(null)
 const organizationId = ref<number | undefined>(undefined)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
@@ -132,8 +145,9 @@ const emailError = computed(() => {
   return emailPattern.test(form.email.trim()) ? '' : t('common.invalidEmail')
 })
 const passwordError = computed(() => {
-  if (!form.password) return t('common.required')
-  return form.password.length >= 6 ? '' : t('users.passwordTooShort')
+  if (!editingId.value && !form.password) return t('common.required')
+  if (editingId.value && !form.password) return ''
+  return (form.password?.length || 0) >= 6 ? '' : t('users.passwordTooShort')
 })
 const organizationError = computed(() => (form.role === 'ADMIN' && !organizationId.value ? t('users.organizationRequired') : ''))
 const canSave = computed(() => !nameError.value && !emailError.value && !passwordError.value && !organizationError.value)
@@ -175,6 +189,14 @@ const showMessage = (text: string, type: 'success' | 'error') => {
   messageType.value = type
 }
 
+const canManageUser = (user: User) => {
+  if (auth.isSuperAdmin.value) {
+    return user.role === 'ADMIN'
+  }
+
+  return user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'
+}
+
 const createOrganizationAdmin = async (selectedOrganizationId: number, request: CreateAdminRequest) => {
   try {
     return await api<User>(`super-admin/organizations/${selectedOrganizationId}/admins`, { method: 'POST', body: request })
@@ -186,6 +208,10 @@ const createOrganizationAdmin = async (selectedOrganizationId: number, request: 
 
     return await api<User>(`super-admin/users/organizations/${selectedOrganizationId}/admins`, { method: 'POST', body: request })
   }
+}
+
+const updateOrganizationAdmin = async (selectedOrganizationId: number, adminId: number, request: CreateAdminRequest) => {
+  return await api<User>(`super-admin/organizations/${selectedOrganizationId}/admins/${adminId}`, { method: 'PUT', body: request })
 }
 
 const loadUsers = async () => {
@@ -235,11 +261,22 @@ const loadOrganizations = async () => {
 
 const resetForm = () => {
   submitted.value = false
+  editingId.value = null
   form.name = ''
   form.email = ''
   form.password = ''
   form.role = auth.isSuperAdmin.value ? 'ADMIN' : 'USER'
   organizationId.value = undefined
+}
+
+const editUser = (user: User) => {
+  submitted.value = false
+  editingId.value = user.id ?? null
+  form.name = user.name || ''
+  form.email = user.email || ''
+  form.password = ''
+  form.role = auth.isSuperAdmin.value ? 'ADMIN' : (user.role as CreatableUserRole | undefined) || 'USER'
+  organizationId.value = user.organizationId || user.organization?.id
 }
 
 const saveUser = async () => {
@@ -259,7 +296,11 @@ const saveUser = async () => {
         email: form.email?.trim(),
         password: form.password,
       }
-      await createOrganizationAdmin(selectedOrganizationId, request)
+      if (editingId.value) {
+        await updateOrganizationAdmin(selectedOrganizationId, editingId.value, request)
+      } else {
+        await createOrganizationAdmin(selectedOrganizationId, request)
+      }
     } else {
       const request: CreateUserRequest = {
         name: form.name?.trim(),
@@ -267,10 +308,14 @@ const saveUser = async () => {
         password: form.password,
         role: form.role,
       }
-      await api<User>('admin/users', { method: 'POST', body: request })
+      if (editingId.value) {
+        await api<User>(`admin/users/${editingId.value}`, { method: 'PUT', body: request })
+      } else {
+        await api<User>('admin/users', { method: 'POST', body: request })
+      }
     }
 
-    showMessage(t('users.created'), 'success')
+    showMessage(editingId.value ? 'Nutzer wurde aktualisiert.' : t('users.created'), 'success')
     resetForm()
     await loadUsers()
   } catch (error) {
@@ -278,6 +323,34 @@ const saveUser = async () => {
     showMessage(apiError.message || t('users.createError'), 'error')
   } finally {
     saving.value = false
+  }
+}
+
+const deleteUser = async (user: User) => {
+  if (!user.id || !canManageUser(user) || !confirm(`Nutzer "${user.name || user.email || user.id}" loeschen?`)) {
+    return
+  }
+
+  try {
+    if (auth.isSuperAdmin.value) {
+      const selectedOrganizationId = user.organizationId || user.organization?.id
+      if (!selectedOrganizationId) {
+        throw new Error(t('users.organizationRequired'))
+      }
+
+      await api<void>(`super-admin/organizations/${selectedOrganizationId}/admins/${user.id}`, { method: 'DELETE' })
+    } else {
+      await api<void>(`admin/users/${user.id}`, { method: 'DELETE' })
+    }
+
+    showMessage('Nutzer wurde geloescht.', 'success')
+    if (editingId.value === user.id) {
+      resetForm()
+    }
+    await loadUsers()
+  } catch (error) {
+    const apiError = error as ApiError
+    showMessage(apiError.message || 'Loeschen fehlgeschlagen.', 'error')
   }
 }
 
