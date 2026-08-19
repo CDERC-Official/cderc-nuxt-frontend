@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { jsPDF } from 'jspdf'
-import type { ApiError, CleaningScheduleResponse, GenerateCleaningScheduleRequest } from '~/types/api'
+import type { ApiError, CleaningScheduleResponse, GenerateCleaningScheduleRequest, Organization } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -96,6 +96,7 @@ const generating = ref(false)
 const exportingPdf = ref(false)
 const submitted = ref(false)
 const schedules = ref<CleaningScheduleResponse[]>([])
+const organization = ref<Organization | null>(null)
 const query = ref('')
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
@@ -135,6 +136,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 const formatDate = (value?: string) => (value ? new Intl.DateTimeFormat(locale.value).format(new Date(value)) : '-')
 const formatRange = (schedule: CleaningScheduleResponse) => `${formatDate(schedule.weekStart)} - ${formatDate(schedule.weekEnd)}`
 const pdfText = (value?: string) => value || '-'
+const logoFormat = (dataUrl: string) => dataUrl.includes('image/png') ? 'PNG' : 'JPEG'
 
 const showMessage = (text: string, type: 'success' | 'error') => {
   message.value = text
@@ -151,6 +153,33 @@ const loadSchedules = async () => {
     showMessage(apiError.message || t('cleaningSchedules.loadError'), 'error')
   } finally {
     pending.value = false
+  }
+}
+
+const loadOrganization = async () => {
+  try {
+    organization.value = await api<Organization>('admin/organization')
+  } catch {
+    organization.value = null
+  }
+}
+
+const loadLogoDataUrl = async (url?: string) => {
+  if (!url) return null
+
+  try {
+    const response = await fetch(url)
+    if (!response.ok) return null
+
+    const blob = await response.blob()
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result))
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
   }
 }
 
@@ -181,10 +210,12 @@ const downloadPdf = async () => {
   exportingPdf.value = true
   try {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+    const logoDataUrl = await loadLogoDataUrl(organization.value?.logo)
+    const organizationName = organization.value?.name || 'CDERC'
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 40
-    const tableTop = 112
+    const tableTop = 132
     const rowHeight = 28
     const columns = [
       { label: t('cleaningSchedules.weekRange'), x: margin, width: 170 },
@@ -193,20 +224,30 @@ const downloadPdf = async () => {
     ]
 
     const drawHeader = () => {
+      if (logoDataUrl) {
+        try {
+          doc.addImage(logoDataUrl, logoFormat(logoDataUrl), margin, 32, 42, 42)
+        } catch {
+          // Continue without logo if the image format cannot be embedded.
+        }
+      }
+
+      const textStart = logoDataUrl ? margin + 56 : margin
+
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(11)
       doc.setTextColor(80, 80, 80)
-      doc.text('CDERC', margin, 42)
+      doc.text(organizationName, textStart, 42)
       doc.setFontSize(20)
       doc.setTextColor(20, 20, 20)
-      doc.text(t('cleaningSchedules.pdfTitle'), margin, 70)
+      doc.text(t('cleaningSchedules.pdfTitle'), textStart, 70)
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
       doc.setTextColor(90, 90, 90)
-      doc.text(`${t('cleaningSchedules.generatedAt')}: ${generatedAtLabel.value}`, margin, 90)
+      doc.text(`${t('cleaningSchedules.generatedAt')}: ${generatedAtLabel.value}`, textStart, 90)
 
       doc.setDrawColor(180, 180, 180)
-      doc.line(margin, 102, pageWidth - margin, 102)
+      doc.line(margin, 112, pageWidth - margin, 112)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(10)
       doc.setTextColor(40, 40, 40)
@@ -251,6 +292,6 @@ const downloadPdf = async () => {
 
 onMounted(async () => {
   form.startDate = today()
-  await loadSchedules()
+  await Promise.all([loadOrganization(), loadSchedules()])
 })
 </script>
