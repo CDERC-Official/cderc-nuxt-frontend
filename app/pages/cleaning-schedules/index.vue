@@ -80,36 +80,11 @@
       </EntityListCard>
     </div>
 
-    <div class="fixed -left-[10000px] top-0 w-[900px] bg-white p-8 text-gray-950" aria-hidden="true">
-      <div ref="pdfContent">
-        <div class="mb-6 border-b border-gray-300 pb-4">
-          <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">CDERC</p>
-          <h1 class="mt-1 text-2xl font-semibold text-gray-950">{{ t('cleaningSchedules.pdfTitle') }}</h1>
-          <p class="mt-2 text-sm text-gray-600">{{ t('cleaningSchedules.generatedAt') }}: {{ generatedAtLabel }}</p>
-        </div>
-
-        <table class="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr class="border-b-2 border-gray-400">
-              <th class="py-3 pr-4 font-semibold">{{ t('cleaningSchedules.weekRange') }}</th>
-              <th class="py-3 pr-4 font-semibold">{{ t('cleaningSchedules.personOne') }}</th>
-              <th class="py-3 pr-0 font-semibold">{{ t('cleaningSchedules.personTwo') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="schedule in filteredSchedules" :key="`pdf-${schedule.id || schedule.weekStart}`" class="border-b border-gray-200">
-              <td class="py-3 pr-4 font-medium">{{ formatRange(schedule) }}</td>
-              <td class="py-3 pr-4">{{ schedule.personOneName || '-' }}</td>
-              <td class="py-3 pr-0">{{ schedule.personTwoName || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { jsPDF } from 'jspdf'
 import type { ApiError, CleaningScheduleResponse, GenerateCleaningScheduleRequest } from '~/types/api'
 
 definePageMeta({ middleware: 'auth' })
@@ -122,7 +97,6 @@ const exportingPdf = ref(false)
 const submitted = ref(false)
 const schedules = ref<CleaningScheduleResponse[]>([])
 const query = ref('')
-const pdfContent = ref<HTMLElement | null>(null)
 const message = ref('')
 const messageType = ref<'success' | 'error'>('success')
 const form = reactive<GenerateCleaningScheduleRequest>({
@@ -160,6 +134,7 @@ const filteredSchedules = computed(() => {
 const today = () => new Date().toISOString().slice(0, 10)
 const formatDate = (value?: string) => (value ? new Intl.DateTimeFormat(locale.value).format(new Date(value)) : '-')
 const formatRange = (schedule: CleaningScheduleResponse) => `${formatDate(schedule.weekStart)} - ${formatDate(schedule.weekEnd)}`
+const pdfText = (value?: string) => value || '-'
 
 const showMessage = (text: string, type: 'success' | 'error') => {
   message.value = text
@@ -201,25 +176,73 @@ const generateSchedules = async () => {
 }
 
 const downloadPdf = async () => {
-  if (!pdfContent.value) return
+  if (filteredSchedules.value.length === 0) return
 
   exportingPdf.value = true
   try {
-    await exportToPDF(
-      `cderc-putzplan-${new Date().toISOString().slice(0, 10)}.pdf`,
-      pdfContent.value,
-      {
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'a4',
-      },
-      {
-        margin: [28, 28, 28, 28],
-        width: 540,
-        windowWidth: 900,
-      },
-    )
-  } catch {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 40
+    const tableTop = 112
+    const rowHeight = 28
+    const columns = [
+      { label: t('cleaningSchedules.weekRange'), x: margin, width: 170 },
+      { label: t('cleaningSchedules.personOne'), x: margin + 190, width: 150 },
+      { label: t('cleaningSchedules.personTwo'), x: margin + 360, width: 150 },
+    ]
+
+    const drawHeader = () => {
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+      doc.setTextColor(80, 80, 80)
+      doc.text('CDERC', margin, 42)
+      doc.setFontSize(20)
+      doc.setTextColor(20, 20, 20)
+      doc.text(t('cleaningSchedules.pdfTitle'), margin, 70)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(10)
+      doc.setTextColor(90, 90, 90)
+      doc.text(`${t('cleaningSchedules.generatedAt')}: ${generatedAtLabel.value}`, margin, 90)
+
+      doc.setDrawColor(180, 180, 180)
+      doc.line(margin, 102, pageWidth - margin, 102)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.setTextColor(40, 40, 40)
+      columns.forEach((column) => doc.text(column.label, column.x, tableTop))
+      doc.line(margin, tableTop + 8, pageWidth - margin, tableTop + 8)
+    }
+
+    drawHeader()
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.setTextColor(35, 35, 35)
+
+    let y = tableTop + 32
+    filteredSchedules.value.forEach((schedule) => {
+      if (y > pageHeight - margin) {
+        doc.addPage()
+        drawHeader()
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(10)
+        doc.setTextColor(35, 35, 35)
+        y = tableTop + 32
+      }
+
+      const values = [formatRange(schedule), pdfText(schedule.personOneName), pdfText(schedule.personTwoName)]
+      columns.forEach((column, index) => {
+        doc.text(doc.splitTextToSize(values[index] ?? '-', column.width), column.x, y)
+      })
+      doc.setDrawColor(225, 225, 225)
+      doc.line(margin, y + 10, pageWidth - margin, y + 10)
+      y += rowHeight
+    })
+
+    doc.save(`cderc-putzplan-${new Date().toISOString().slice(0, 10)}.pdf`)
+  } catch (error) {
+    console.error('Cleaning schedule PDF export failed', error)
     showMessage(t('cleaningSchedules.pdfError'), 'error')
   } finally {
     exportingPdf.value = false
