@@ -15,6 +15,7 @@
     locales: [
       { code: 'de', name: 'Deutsch', language: 'de-AT' },
       { code: 'en', name: 'English', language: 'en-US' },
+      { code: 'fr', name: 'Français', language: 'fr-FR' },
     ],
     vueI18n: './i18n.config.ts',
   },

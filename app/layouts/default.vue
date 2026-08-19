@@ -138,6 +138,7 @@ const navItems = computed(() => {
 const localeOptions = [
   { code: 'de' as const, label: 'DE' },
   { code: 'en' as const, label: 'EN' },
+  { code: 'fr' as const, label: 'FR' },
 ]
 
 const isActive = (path: string) => route.path === path || route.path.startsWith(`${path}/`)
