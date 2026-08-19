@@ -62,6 +62,7 @@ export default defineI18nConfig(() => ({
       dashboard: {
         eyebrow: 'Uebersicht',
         title: 'Dashboard',
+        organizationContext: 'Aktueller Verein',
         addChild: 'Kind erfassen',
         recentChildren: 'Aktuelle Kinder',
         backend: 'Backend',
@@ -359,6 +360,7 @@ export default defineI18nConfig(() => ({
       dashboard: {
         eyebrow: 'Overview',
         title: 'Dashboard',
+        organizationContext: 'Current organization',
         addChild: 'Add child',
         recentChildren: 'Recent children',
         backend: 'Backend',
@@ -656,6 +658,7 @@ export default defineI18nConfig(() => ({
       dashboard: {
         eyebrow: "Vue d'ensemble",
         title: 'Tableau de bord',
+        organizationContext: 'Association actuelle',
         addChild: 'Ajouter un enfant',
         recentChildren: 'Enfants récents',
         backend: 'Backend',
